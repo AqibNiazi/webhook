@@ -1,6 +1,6 @@
 const express = require("express");
 const bodyParser = require("body-parser");
-const router = require("./collections");
+const router = require("./src/collections");
 require("dotenv").config();
 const app = express();
 
