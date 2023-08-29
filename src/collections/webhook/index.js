@@ -30,31 +30,26 @@ module.exports = () => {
         body_param.entry[0].changes[0].value.messages &&
         body_param.entry[0].changes[0].value.messages[0]
       ) {
-        let phone_no_id =
+        let phone_number_id =
           body_param.entry[0].changes[0].value.metadata.phone_number_id;
         let from = body_param.entry[0].changes[0].value.messages[0].from;
         let msg_body =
           body_param.entry[0].changes[0].value.messages[0].text.body;
         try {
           axios({
-            method: "POST",
+            method: "POST", // Required, HTTP method, a string, e.g. POST, GET
             url:
               "https://graph.facebook.com/v17.0/" +
-              phone_no_id +
+              phone_number_id +
               "/messages?access_token=" +
-              whatsapp_token,
+              token,
             data: {
               messaging_product: "whatsapp",
               to: from,
-              text: {
-                body: "This is some text." + msg_body,
-              },
+              text: { body: "Ack: " + msg_body },
             },
-            headers: {
-              "Content-Type": "application/json",
-            },
+            headers: { "Content-Type": "application/json" },
           });
-
           res.sendStatus(200);
         } catch (error) {
           console.error("Error sending message:", error);
