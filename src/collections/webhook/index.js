@@ -23,41 +23,38 @@ module.exports = () => {
   routes.post("/", (req, res) => {
     let body_param = req.body;
     console.log(JSON.stringify(body_param, null, 2));
-    if (body_param.object) {
+    
+    if (body_param.object === "page") {
       if (
         body_param.entry &&
-        body_param.entry[0].changes &&
-        body_param.entry[0].changes[0].value.messages &&
-        body_param.entry[0].changes[0].value.messages[0]
+        body_param.entry[0].messaging &&
+        body_param.entry[0].messaging[0].message &&
+        body_param.entry[0].messaging[0].message.text
       ) {
-        let phone_number_id =
-          body_param.entry[0].changes[0].value.metadata.phone_number_id;
-        let from = body_param.entry[0].changes[0].value.messages[0].from;
-        let msg_body =
-          body_param.entry[0].changes[0].value.messages[0].text.body;
+        let senderId = body_param.entry[0].messaging[0].sender.id;
+        let userMessage = body_param.entry[0].messaging[0].message.text;
+
         try {
           axios({
-            method: "POST", // Required, HTTP method, a string, e.g. POST, GET
+            method: "POST",
             url:
-              "https://graph.facebook.com/v17.0/" +
-              phone_number_id +
-              "/messages?access_token=" +
+              "https://graph.facebook.com/v17.0/me/messages?access_token=" +
               whatsapp_token,
             data: {
-              messaging_product: "whatsapp",
-              to: from,
-              text: { body: "Ack: " + msg_body },
+              messaging_type: "RESPONSE",
+              recipient: { id: senderId },
+              message: { text: "You said: " + userMessage },
             },
             headers: { "Content-Type": "application/json" },
           });
+
           res.sendStatus(200);
         } catch (error) {
           console.error("Error sending message:", error);
-          res.sendStatus(500); // Send an error response if something goes wrong
+          res.sendStatus(500);
         }
       }
     } else {
-      // Return a '404 Not Found' if event is not from a WhatsApp API
       res.sendStatus(404);
     }
   });
