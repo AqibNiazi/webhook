@@ -20,52 +20,55 @@ module.exports = () => {
       }
     }
   });
-  routes.post("/", (req, res) => {
-    let body_param = req.body;
-    console.log(JSON.stringify(body_param, null, 2));
-    if (body_param.object) {
+  routes.post("/", async (req, res) => {
+    try {
+      const body_param = req.body;
+      console.log(JSON.stringify(body_param, null, 2));
+
       if (
+        body_param.object &&
         body_param.entry &&
-        body_param.entry[0].changes &&
-        body_param.entry[0].changes[0].value.messages &&
-        body_param.entry[0].changes[0].value.messages[0]
+        body_param.entry[0].changes
       ) {
-        let phone_no_id =
-          body_param.entry[0].changes[0].value.metadata.phone_number_id;
-        let from = body_param.entry[0].changes[0].value.messages[0].from;
-        let msg_body =
-          body_param.entry[0].changes[0].value.messages[0].text.body;
-        try {
-          axios({
-            method: "POST",
-            url:
-              "https://graph.facebook.com/v17.0/" +
-              phone_no_id +
-              "/messages?access_token=" +
-              whatsapp_token,
-            data: {
-              messaging_product: "whatsapp",
-              to: from,
-              text: {
-                body: "This is some text." + msg_body,
+        const message = body_param.entry[0].changes[0].value.messages[0];
+
+        if (message) {
+          const phone_no_id = message.metadata.phone_number_id;
+          const from = message.from;
+
+          const templateData = {
+            messaging_product: "whatsapp",
+            to: from,
+            type: "template",
+            template: {
+              name: "hello_world",
+              language: {
+                code: "en_US",
               },
             },
-            headers: {
-              "Content-Type": "application/json",
-            },
-          });
+          };
+
+          await axios.post(
+            `https://graph.facebook.com/v17.0/${phone_no_id}/messages?access_token=${whatsapp_token}`,
+            templateData,
+            {
+              headers: {
+                "Content-Type": "application/json",
+              },
+            }
+          );
 
           res.sendStatus(200);
-        } catch (error) {
-          console.error("Error sending message:", error);
-          res.sendStatus(500); // Send an error response if something goes wrong
         }
+      } else {
+        res.sendStatus(404);
       }
-    } else {
-      // Return a '404 Not Found' if event is not from a WhatsApp API
-      res.sendStatus(404);
+    } catch (error) {
+      console.error("Error sending message:", error);
+      res.sendStatus(500);
     }
   });
+  
 
   return routes;
 };
